@@ -1,10 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [user, setUser] = useState({ name: "User", email: "" });
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setUser({ name: parsed.name || "User", email: parsed.email || "" });
+      } catch (e) {
+        console.error("Invalid user JSON in localStorage.");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -12,22 +37,24 @@ const Navbar = () => {
     navigate("/login");
   };
 
-  const isActive = (path) =>
-    path === ""
-      ? location.pathname === "/" || location.pathname === "/dashboard"
-      : location.pathname.includes(path);
+  const isActive = (path) => {
+    const current = location.pathname;
+    if (path === "/") {
+      return (
+        current === "/" ||
+        current === "/user/dashboard" ||
+        current === "/user/dashboard/home"
+      );
+    }
+    return current === `/user/dashboard/${path}`;
+  };
 
   return (
     <>
       <style>{`
-        /* Rainbow gradient animated text */
         @keyframes rainbow {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
         }
         .rainbow-text {
           background: linear-gradient(270deg, #ff0000, #ffa500, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
@@ -38,7 +65,6 @@ const Navbar = () => {
           user-select: none;
         }
 
-        /* Slide down fade-in for menu links */
         .nav-link {
           opacity: 0;
           transform: translateY(-20px);
@@ -53,7 +79,7 @@ const Navbar = () => {
             transform: translateY(0);
           }
         }
-        /* Stagger animation delays for nav items */
+
         .nav-link:nth-child(1) { animation-delay: 0.1s; }
         .nav-link:nth-child(2) { animation-delay: 0.2s; }
         .nav-link:nth-child(3) { animation-delay: 0.3s; }
@@ -61,51 +87,25 @@ const Navbar = () => {
         .nav-link:nth-child(5) { animation-delay: 0.5s; }
         .nav-link:nth-child(6) { animation-delay: 0.6s; }
         .nav-link:nth-child(7) { animation-delay: 0.7s; }
-        .nav-link:nth-child(8) { animation-delay: 0.9s; } /* Logout button */
+        .nav-link:nth-child(8) { animation-delay: 0.9s; }
 
-        /* Active nav link style */
         .active-link {
-          color: #38bdf8; /* Tailwind's sky-400 */
+          color: #38bdf8;
           font-weight: 700;
           border-bottom: 2px solid #38bdf8;
           padding-bottom: 2px;
         }
 
-        /* Hover effect for large screen nav links */
-        @media(min-width: 768px) {
-          ul.md\\:flex li a {
-            transition: color 0.3s ease, transform 0.3s ease;
-          }
-          ul.md\\:flex li a:hover {
-            color: #60a5fa; /* Tailwind sky-500 */
-            transform: scale(1.1);
-          }
-          ul.md\\:flex li button:hover {
-            background-color: #dc2626; /* Tailwind red-600 */
-          }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Mobile menu slide down/up animation */
-        @keyframes slideDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
         @keyframes slideUp {
-          from {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          to {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
+          from { opacity: 1; transform: translateY(0); }
+          to { opacity: 0; transform: translateY(-20px); }
         }
+
         .mobile-menu-enter {
           animation: slideDown 0.3s forwards;
         }
@@ -128,44 +128,110 @@ const Navbar = () => {
         </button>
 
         <ul
-          className={`${
+          className={`transition-all duration-300 ${
             menuOpen ? "flex mobile-menu-enter" : "hidden"
           } flex-col absolute top-full left-0 w-full bg-black bg-opacity-90 shadow-md py-4 px-6 gap-4 font-medium
           md:flex md:flex-row md:static md:shadow-none md:py-0 md:px-0 md:gap-10 md:bg-transparent`}
           style={{ zIndex: 25 }}
         >
-          {[
-            { to: "home", label: "Home" },
-            { to: "create-post", label: "Create Blogs" },
-            { to: "my-posts", label: "My Blogs" },
-            { to: "edit-posts", label: "Edit Blogs" },
-            { to: "profile", label: "Profile" },
-            { to: "contact", label: "Contact" },
-            { to: "about", label: "About" },
-          ].map(({ to, label }, idx) => (
-            <li
-              key={label}
-              className="nav-link"
-              style={{ animationDelay: `${(idx + 1) * 0.1}s` }}
+          <Link
+            to="/user/dashboard/home"
+            onClick={() => setMenuOpen(false)}
+            className={`transition duration-300 transform hover:text-sky-500 hover:scale-110 ${
+              isActive("/") ? "active-link" : ""
+            }`}
+          >
+            Home
+          </Link>
+
+          <li className="nav-link">
+            <Link
+              to="create-post"
+              onClick={() => setMenuOpen(false)}
+              className={`transition duration-300 transform hover:text-sky-500 hover:scale-110 ${
+                isActive("create-post") ? "active-link" : ""
+              }`}
             >
-              <Link
-                to={to}
-                onClick={() => setMenuOpen(false)}
-                className={`hover:text-blue-400 transition-colors duration-300 ${
-                  isActive(to) ? "active-link" : ""
-                }`}
-              >
-                {label}
-              </Link>
-            </li>
-          ))}
-          <li className="nav-link" style={{ animationDelay: "0.9s" }}>
+              Create Blogs
+            </Link>
+          </li>
+          <li className="nav-link">
+            <Link
+              to="my-posts"
+              onClick={() => setMenuOpen(false)}
+              className={`transition duration-300 transform hover:text-sky-500 hover:scale-110 ${
+                isActive("my-posts") ? "active-link" : ""
+              }`}
+            >
+              My Blogs
+            </Link>
+          </li>
+          <li className="nav-link">
+            <Link
+              to="edit-posts"
+              onClick={() => setMenuOpen(false)}
+              className={`transition duration-300 transform hover:text-sky-500 hover:scale-110 ${
+                isActive("edit-posts") ? "active-link" : ""
+              }`}
+            >
+              Edit Blogs
+            </Link>
+          </li>
+          <li className="nav-link">
+            <Link
+              to="profile"
+              onClick={() => setMenuOpen(false)}
+              className={`transition duration-300 transform hover:text-sky-500 hover:scale-110 ${
+                isActive("profile") ? "active-link" : ""
+              }`}
+            >
+              Profile
+            </Link>
+          </li>
+          <li className="nav-link">
+            <Link
+              to="contact"
+              onClick={() => setMenuOpen(false)}
+              className={`transition duration-300 transform hover:text-sky-500 hover:scale-110 ${
+                isActive("contact") ? "active-link" : ""
+              }`}
+            >
+              Contact
+            </Link>
+          </li>
+          <li className="nav-link">
+            <Link
+              to="about"
+              onClick={() => setMenuOpen(false)}
+              className={`transition duration-300 transform hover:text-sky-500 hover:scale-110 ${
+                isActive("about") ? "active-link" : ""
+              }`}
+            >
+              About
+            </Link>
+          </li>
+
+          {/* 👤 Profile Dropdown */}
+          <li className="nav-link relative" ref={profileRef}>
             <button
-              onClick={handleLogout}
-              className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded transition-colors duration-300"
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="transition duration-300 transform hover:text-sky-500 hover:scale-110 text-white flex items-center gap-2"
             >
-              Logout
+              👤 {user.name}
             </button>
+            {profileOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white text-black rounded-md shadow-md z-50 px-4 py-3 space-y-2">
+                <p className="font-semibold truncate">{user.name}</p>
+                <p className="text-sm text-gray-600 truncate">{user.email}</p>
+                <hr className="border-gray-300" />
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left text-red-700 hover:text-red-800 transition duration-200"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </li>
         </ul>
       </nav>

@@ -26,6 +26,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  status: { type: String, enum: ["active", "banned"], default: "active" },
+  profileImage: String,
 });
 
 module.exports = mongoose.model("User", userSchema);

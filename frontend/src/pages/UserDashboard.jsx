@@ -28,9 +28,12 @@ const UserDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <main className="relative z-10 flex-grow pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <Outlet />
-      </main>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <main className="relative z-10 flex-grow pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+          <Outlet />
+        </main>
+      </div>
 
       {/* Footer */}
       <div className="relative z-10">

@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Logout from "../Admin/Logout"; // 🔁 default import, no curly braces
+import { Logout } from "../Admin/Logout"; // 🔁 default import, no curly braces
 const AdminDashboard = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   return (
