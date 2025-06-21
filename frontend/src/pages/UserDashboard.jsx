@@ -1,44 +1,36 @@
 // pages/UserDashboard.jsx
 import React from "react";
-import { Outlet } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import { Link, Outlet, useLocation } from "react-router-dom";
+// import Welcome from "./Welcome"; // Import Welcome to be the default view
 
 const UserDashboard = () => {
-  return (
-    <div className="relative min-h-screen flex flex-col text-white bg-black">
-      {/* Background image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1470&q=80')",
-          zIndex: 0,
-        }}
-      />
-      {/* Dark overlay */}
-      <div
-        className="absolute inset-0 bg-black bg-opacity-70"
-        style={{ zIndex: 5 }}
-      />
+  const location = useLocation();
+  const isDashboardHome = location.pathname === "/userdashboard" || location.pathname === "/userdashboard/";
 
-      {/* Navigation Bar */}
-      <div className="relative z-10">
-        <Navbar />
-      </div>
+  return (
+    <div className="flex">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-800 text-white min-h-screen p-4">
+        <h2 className="text-2xl font-bold mb-6">Dashboard</h2>
+        <nav>
+          <ul>
+            <li className="mb-2">
+              <Link to="/user/dashboard/profile" className="block p-2 rounded hover:bg-gray-700">Profile</Link>
+            </li>
+            <li className="mb-2">
+              <Link to="/user/dashboard/my-blogs" className="block p-2 rounded hover:bg-gray-700">My Blogs</Link>
+            </li>
+            <li className="mb-2">
+              <Link to="/" className="block p-2 rounded hover:bg-gray-700">Back to Main Site</Link>
+            </li>
+          </ul>
+        </nav>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex flex-col min-h-screen">
-        <Navbar />
-        <main className="relative z-10 flex-grow pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-          <Outlet />
-        </main>
-      </div>
-
-      {/* Footer */}
-      <div className="relative z-10">
-        <Footer />
-      </div>
+      <main className="flex-1 p-10 bg-gray-100">
+        <Outlet />
+      </main>
     </div>
   );
 };

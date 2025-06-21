@@ -1,0 +1,124 @@
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+
+// Blog Logo Component (reused from login)
+const BlogLogo = () => (
+  <div className="flex items-center gap-2 mb-6">
+    <div className="bg-blue-600 rounded-xl p-2 shadow-md">
+      <svg
+        className="w-10 h-10 text-white"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <path d="M4 4h16v16H4z" strokeLinejoin="round" />
+        <path d="M8 8h8v8H8z" fill="white" />
+      </svg>
+    </div>
+    <h1 className="text-2xl font-bold text-blue-700 font-montserrat">
+      Blog<span className="text-blue-400">Platform</span>
+    </h1>
+  </div>
+);
+
+const Register = () => {
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { register } = useAuth();
+
+  useEffect(() => {
+    setForm({ username: "", email: "", password: "" });
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    try {
+      await register(form);
+      alert("Registration successful! Please log in.");
+      navigate("/login");
+    } catch (err) {
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-white font-montserrat">
+      <BlogLogo />
+      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center">
+        Create your <span className="text-blue-600">Blog Platform</span> account
+      </h1>
+      <form
+        onSubmit={handleSubmit}
+        autoComplete="off"
+        className="bg-blue-50 p-8 rounded-2xl shadow-lg w-full max-w-md space-y-6 border border-blue-300"
+      >
+        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+          <input
+            type="text"
+            name="username"
+            required
+            value={form.username}
+            onChange={handleChange}
+            placeholder="Your username"
+            className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+          <input
+            type="email"
+            name="email"
+            required
+            value={form.email}
+            onChange={handleChange}
+            placeholder="you@example.com"
+            className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <input
+            type="password"
+            name="password"
+            required
+            value={form.password}
+            onChange={handleChange}
+            placeholder="••••••••"
+            className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 rounded-full font-semibold text-lg transition transform hover:scale-105 shadow-md"
+        >
+          {loading ? "Creating Account..." : "Register"}
+        </button>
+        <p className="text-center text-sm mt-4">
+          Already have an account?{' '}
+          <Link to="/login" className="text-blue-700 underline font-medium">
+            Log In
+          </Link>
+        </p>
+      </form>
+    </div>
+  );
+};
+
+export default Register; 

@@ -1,104 +1,135 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
-export default function Login() {
+// Blog Logo Component
+const BlogLogo = () => (
+  <div className="flex items-center gap-2 mb-6">
+    <div className="bg-blue-600 rounded-xl p-2 shadow-md">
+      <svg
+        className="w-10 h-10 text-white"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+      >
+        <path d="M4 4h16v16H4z" strokeLinejoin="round" />
+        <path d="M8 8h8v8H8z" fill="white" />
+      </svg>
+    </div>
+    <h1 className="text-2xl font-bold text-blue-700 font-montserrat">
+      Blog<span className="text-blue-400">Platform</span>
+    </h1>
+  </div>
+);
+
+const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
+    
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        "http://localhost:5000/api/userdashboard/users/login",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(form),
-        }
-      );
+      const result = await login(form);
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Login failed");
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      navigate(data.redirectUrl);
+      // Use the redirectUrl from the server's response
+      if (result.redirectUrl) {
+        navigate(result.redirectUrl);
+      } else {
+        // Fallback in case redirectUrl is not provided
+        if (result.user.role === "admin") {
+          navigate("/admin/dashboard");
+        } else {
+          navigate("/user/dashboard");
+        }
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || "Login failed. Please check your credentials and try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    setForm({ email: "", password: "" });
+  }, []);
+
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 animate-bg-shift transition-colors duration-1000">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-white font-montserrat">
+      <BlogLogo />
+
+      <h1 className="text-3xl md:text-4xl font-bold mb-4 text-center">
+        Welcome Back to{" "}
+        <span className="text-blue-600">Blog Platform</span>
+      </h1>
+      <p className="text-gray-600 text-lg mb-6 text-center">
+        Log in to share your stories with the world
+      </p>
+
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-2xl animate-fade-in transition-all duration-700 ease-in-out"
+        autoComplete="off"
+        className="bg-blue-50 p-8 rounded-2xl shadow-lg w-full max-w-md space-y-6 border border-blue-300"
       >
-        <h2 className="text-3xl font-extrabold text-center text-purple-700 mb-6 tracking-wide">
-          Welcome Back
-        </h2>
+        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
 
-        {error && (
-          <div className="text-red-600 text-sm mb-4 animate-pulse text-center">
-            {error}
-          </div>
-        )}
-
-        <div className="relative mb-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email Address
+          </label>
           <input
-            name="email"
             type="email"
+            name="email"
+            required
             value={form.email}
             onChange={handleChange}
-            required
-            className="peer w-full border-b-2 border-gray-300 focus:border-blue-500 outline-none bg-transparent pt-6 pb-2 placeholder-transparent"
-            placeholder="Email"
+            placeholder="you@example.com"
+            className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <label className="absolute left-0 top-0 text-gray-500 text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-0 peer-focus:text-sm peer-focus:text-blue-600">
-            Email
-          </label>
         </div>
 
-        <div className="relative mb-8">
-          <input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            className="peer w-full border-b-2 border-gray-300 focus:border-blue-500 outline-none bg-transparent pt-6 pb-2 placeholder-transparent"
-            placeholder="Password"
-          />
-          <label className="absolute left-0 top-0 text-gray-500 text-sm transition-all peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-0 peer-focus:text-sm peer-focus:text-blue-600">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Password
           </label>
+          <input
+            type="password"
+            name="password"
+            required
+            value={form.password}
+            onChange={handleChange}
+            placeholder="••••••••"
+            className="w-full px-4 py-3 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         <button
           type="submit"
-          className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-500 text-white font-semibold rounded-xl shadow-lg hover:scale-105 hover:shadow-xl transition-transform duration-300 active:scale-95"
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 rounded-full font-semibold text-lg transition transform hover:scale-105 shadow-md"
         >
-          Login
+          {loading ? "Logging In..." : "Log In"}
         </button>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
-          <Link
-            to="/signup"
-            className="text-blue-600 font-semibold hover:underline"
-          >
-            Sign up here
+        <p className="text-center text-sm mt-4">
+          Don't have an account?{" "}
+          <Link to="/register" className="text-blue-700 underline font-medium">
+            Sign Up
           </Link>
         </p>
       </form>
     </div>
   );
-}
+};
+
+export default Login;

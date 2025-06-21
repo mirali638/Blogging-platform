@@ -17,6 +17,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  phone: {
+    type: String,
+    trim: true,
+    default: "",
+  },
+  address: {
+    type: String,
+    trim: true,
+    default: "",
+  },
   role: {
     type: String,
     enum: ["user", "admin"], // you can add more roles here
@@ -28,6 +38,14 @@ const userSchema = new mongoose.Schema({
   },
   status: { type: String, enum: ["active", "banned"], default: "active" },
   profileImage: String,
+  lastLogin: {
+    type: Date,
+    default: null,
+  },
+  lastActivity: {
+    type: Date,
+    default: null,
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);
